@@ -20,10 +20,6 @@ public final class Utils {
         return collection != null && !collection.isEmpty();
     }
 
-    public static boolean isNotNull(Collection<?> collection) {
-        return collection != null;
-    }
-
     public static boolean isEmpty(Collection<?> collection) {
         return collection != null && collection.isEmpty();
     }
@@ -32,12 +28,16 @@ public final class Utils {
         return collection == null || collection.isEmpty();
     }
 
-    public static boolean isNull(Collection<?> collection) {
-        return collection == null;
+    public static boolean isNull(Object o) {
+        return o == null;
     }
 
-    public static String firstOrEmpty(List<String> list) {
-        return isNotEmpty(list) ? lsit.get(0) : "";
+    public static boolean isNotNull(Object o) {
+        return o != null;
+    }
+
+    public static String firstOrEmpty(List<?> list) {
+        return isNotEmpty(list) ? String.valueOf(lsit.get(0)) : "";
     }
 
     public static boolean elContains(String find, Collection<String> collection) {

@@ -16,6 +16,10 @@ public class JsonUtils {
         return Filter.filter(Criteria.where(field).contains(value));
     }
 
+    public static boolean contextContainsField(JsonContext c, String field) {
+        c.read("$..[?]", Filter.filter(Criteria.where(field).exists(true));)
+    }
+
     public static Predicate fieldContainsIgnoreCase(String field, Object value) {
         // todo
     }
