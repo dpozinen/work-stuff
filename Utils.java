@@ -1,3 +1,7 @@
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.Collection;
 import java.util.Collections;
 
@@ -60,5 +64,15 @@ public final class Utils {
         return s.matches(.*\\d+.*);
     }
 
-
+    public static void log(String file, String log) {
+        log = log == null ? "null" : log;
+        try {
+            Path p = Paths.get(file);
+            if (Files.notExists(p))
+                Files.createFile(p);
+            Files.write(p, log.getBytes(), StandardOpenOption.APPEND);
+        } catch (IOException e) {
+            System.err.printf("%n%nCOULD NOT LOG TO FILE %s%nCHECK PROVIDED PATH%n%n", file);
+        }
+    }
 }
