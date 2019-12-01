@@ -47,11 +47,25 @@ public final class PostBuilder {
     }
 
     public static PostBuilder fromMap(Map<?, ?> map) {
-        // todo
+        PostBuilder b = new PostBuilder();
+        for (Map.Entry<?, ?> e : map) {
+            String k = String.valueOf(e.getKey());
+            String v = String.valueOf(e.getValue());
+            b.content.addEntry(k, v);
+            b.parameters.put(k, v);
+        }
+        return b;
     }
 
     public static PostBuilder fromMap(Map<?, ?> map, PostContentFormatter formatter) {
-        // todo
+        PostBuilder b = new PostBuilder(formatter);
+        for (Map.Entry<?, ?> e : map) {
+            String k = String.valueOf(e.getKey());
+            String v = String.valueOf(e.getValue());
+            b.content.addEntry(k, v);
+            b.parameters.put(k, v);
+        }
+        return b;
     }
 
     public PostBuilder add(String k, String v) {

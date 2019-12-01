@@ -1,34 +1,46 @@
-public final class HeaderBuilder {
+public final class HeaderWrapper {
     private HttpHeader header;
 
-    public HeaderBuilder() {
+    public HeaderWrapper() {
         this.header = new HttpHeader();
     }
 
-    public HeaderBuilder(HttpHeader h) {
+    public HeaderWrapper(HttpHeader h) {
         this.header = h;
     }
 
-    public HeaderBuilder add(HttpHeaderKey k, String v) {
+    public HeaderWrapper add(HttpHeaderKey k, String v) {
         header.add(k, v);
         return this;
     }
 
-    public HeaderBuilder add(String k, String v) {
+    public HeaderWrapper add(String k, String v) {
         header.add(new HttpHeaderKey(k), v);
         return this;
     }
 
-    public HeaderBuilder remove(HttpHeaderKey k) {
+    public HeaderWrapper remove(HttpHeaderKey k) {
         if (header.contains(k))
             header.remove(k, v);
         return this;
     }
 
-    public HeaderBuilder set(HttpHeaderKey k, String v) {
+    public HeaderWrapper set(HttpHeaderKey k, String v) {
         if (header.contains(k))
             header.set(k, v);
         return this;
+    }
+
+    public HeaderWrapper setOrAdd(HttpHeaderKey k, String v) {
+        if (header.contains(k))
+            header.set(k, v);
+        else
+            header.add(k, v);
+        return this;
+    }
+
+    public HeaderWrapper referer(String v) {
+        return setOrAdd(HttpHeaderKey.Referer, v);
     }
 
     public HttpHeader build() {
