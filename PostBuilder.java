@@ -1,99 +1,116 @@
+package blackbee.swarm.parsinghelper;
+
+import blackbee.swarm.core.web.IPostContentFormatter;
+import blackbee.swarm.core.web.PostContent;
+import blackbee.swarm.core.web.PostContentDefaultFormatter;
+import blackbee.swarm.formatter.PostContentSingleValueFormatter;
+import org.apache.commons.lang3.StringUtils;
+
 import java.util.HashMap;
 import java.util.Map;
 
-public final class PostBuilder {
-    private PostContent content;
-    private PostContentFormatter formatter;
-    private Map<String, String> parameters;
+/**
+ * @author dpozinen
+ */
+public final class PostWrapper
+{
+	private PostContent           content;
+	private IPostContentFormatter formatter;
+	private Map<String, String>   parameters;
 
-    public PostBuilder() {
-        this.content = new PostContent();
-        this.formatter = content.getFormatter();
-        this.parameters = new HashMap<>();
-    }
+	public PostWrapper() {
+		this.content = new PostContent();
+		this.formatter = content.getFormatter();
+		this.parameters = new HashMap<>();
+	}
 
-    public static PostBuilder copyOf(PostBuilder other) {
-        PostBuilder b = new PostBuilder();
-        b.content = other.content;
-        b.formatter = other.formatter;
-        b.parameters = new HashMap(other.parameters);
-        return b;
-    }
+	public static PostWrapper copyOf(PostWrapper other) {
+		PostWrapper b = new PostWrapper();
+		b.content = other.content;
+		b.formatter = other.formatter;
+		b.parameters = new HashMap<>(other.parameters);
+		return b;
+	}
 
-    private void copyHere(PostBuilder other) {
-        this.content = other.content;
-        this.formatter = other.formatter;
-        this.parameters = new HashMap(other.parameters);
-    }
+	private PostWrapper copyHere(PostWrapper other) {
+		this.content = other.content;
+		this.formatter = other.formatter;
+		this.parameters = new HashMap<>(other.parameters);
+		return this;
+	}
 
-    public PostBuilder(PostContent content) {
-        this.content = content;
-        this.formatter = content.getFormatter();
-        this.parameters = new HashMap<>();
-    }
+	public PostWrapper(PostContent content) {
+		this.content = content;
+		this.formatter = content.getFormatter();
+		this.parameters = getParamsFromContent(content);
+	}
 
-    private PostBuilder(PostContentFormatter formatter) {
-        this.content = new PostContent(formatter);
-        this.formatter = formatter;
-        this.parameters = new HashMap<>();
-    }
+	private static Map<String, String> getParamsFromContent(PostContent content)
+	{
+		Map<String, String> map = new HashMap<>();
+		String[] split = content.toString().split("&");
 
-    public static PostBuilder formattedBy(PostContentFormatter formatter) {
-        return new PostBuilder(formatter);
-    }
+		for ( String s : split )
+		{
+			String k = StringUtils.substringBefore(s, "=");
+			String v = StringUtils.substringAfter(s, "=");
+			map.put(k, v);
+		}
+		return map;
+	}
 
-    public static PostBuilder singleEntry(boolean encode) {
-        return new PostBuilder(new SingleEntryPostContentFormatter(encode));
-    }
+	private PostWrapper(IPostContentFormatter formatter) {
+		this.content = new PostContent(formatter);
+		this.formatter = formatter;
+		this.parameters = new HashMap<>();
+	}
 
-    public static PostBuilder fromMap(Map<?, ?> map) {
-        PostBuilder b = new PostBuilder();
-        for (Map.Entry<?, ?> e : map) {
-            String k = String.valueOf(e.getKey());
-            String v = String.valueOf(e.getValue());
-            b.content.addEntry(k, v);
-            b.parameters.put(k, v);
-        }
-        return b;
-    }
+	public static PostWrapper formattedBy(IPostContentFormatter formatter) {
+		return new PostWrapper(formatter);
+	}
 
-    public static PostBuilder fromMap(Map<?, ?> map, PostContentFormatter formatter) {
-        PostBuilder b = new PostBuilder(formatter);
-        for (Map.Entry<?, ?> e : map) {
-            String k = String.valueOf(e.getKey());
-            String v = String.valueOf(e.getValue());
-            b.content.addEntry(k, v);
-            b.parameters.put(k, v);
-        }
-        return b;
-    }
+	public static PostWrapper singleValue(boolean encode) {
+		return new PostWrapper(new PostContentSingleValueFormatter(encode));
+	}
 
-    public PostBuilder add(String k, String v) {
-        content.addEntry(k, v);
-        parameters.put(k, v);
-        return this;
-    }
+	public static PostWrapper fromMap(Map<?, ?> map) {
+		return fromMap(map, new PostContentDefaultFormatter());
+	}
 
-    public PostBuilder set(String k, String v) {
-        parameters.put(k, v);
-        PostBuilder b = fromMap(parameters, this.formatter);
-        copyHere(b);
-        return this;
-    }
+	public static PostWrapper fromMap(Map<?, ?> map, IPostContentFormatter formatter) {
+		PostWrapper b = new PostWrapper(formatter);
+		for (Map.Entry<?, ?> e : map.entrySet()) {
+			String k = String.valueOf(e.getKey());
+			String v = String.valueOf(e.getValue());
+			b.content.addEntry(k, v);
+			b.parameters.put(k, v);
+		}
+		return b;
+	}
 
-    public PostBuilder remove(String k) {
-        parameters.remove(k);
-        PostBuilder b = fromMap(parameters, this.formatter);
-        copyHere(b);
-        return this;
-    }
+	public PostWrapper add(String k, String v) {
+		content.addEntry(k, v);
+		parameters.put(k, v);
+		return this;
+	}
 
-    public PostContent build() {
-        return content;
-    }
+	public PostWrapper set(String k, String v) {
+		parameters.put(k, v);
+		return copyHere(fromMap(parameters, this.formatter));
+	}
 
-    public String toString() {
-        return content.toString();
-    }
+	public PostWrapper remove(String k) {
+		parameters.remove(k);
+		return copyHere(fromMap(parameters, this.formatter));
+	}
+
+	public PostContent content() {
+		return content;
+	}
+
+	@Override
+	public String toString() {
+		return content.toString();
+	}
 
 }
