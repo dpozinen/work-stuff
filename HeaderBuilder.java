@@ -1,4 +1,4 @@
-package blackbee.swarm.parsers.amazon.latest;
+package blackbee.swarm.parsinghelper;
 
 import blackbee.common.collections.generic.IKeyValuePair;
 import blackbee.swarm.core.web.HttpHeader;
@@ -7,6 +7,9 @@ import blackbee.swarm.core.web.HttpHeaderKey;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * @author dpozinen
+ */
 public final class HeaderBuilder {
 	private final HttpHeader header;
 	private static final Map<String, HttpHeaderKey> constantHeaders = new HashMap<String, HttpHeaderKey>(){{
@@ -78,24 +81,12 @@ public final class HeaderBuilder {
 		return setOrAdd(get(k), v);
 	}
 
-	public HeaderBuilder accept(String v) {
-		return setOrAdd(HttpHeaderKey.Accept, v);
-	}
-
-	public HeaderBuilder acceptEncoding(String v) {
-		return setOrAdd(HttpHeaderKey.AcceptEncoding, v);
-	}
-
 	public HeaderBuilder userAgent(String v) {
 		return setOrAdd(HttpHeaderKey.UserAgent, v);
 	}
 
 	public HeaderBuilder referer(String v) {
 		return setOrAdd(HttpHeaderKey.Referer, v);
-	}
-
-	public HeaderBuilder acceptLanguage(String v) {
-		return setOrAdd(HttpHeaderKey.AcceptLanguage, v);
 	}
 
 	public HeaderBuilder cookie(String v) {
@@ -106,6 +97,7 @@ public final class HeaderBuilder {
 		return header;
 	}
 
+	@Override
 	public String toString() {
 		StringBuilder s = new StringBuilder();
 		for ( IKeyValuePair<HttpHeaderKey, String> kv : header )
