@@ -6,6 +6,7 @@ import net.minidev.json.JSONObject;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -241,6 +242,17 @@ public final class Entry implements Comparable<Entry> {
 		String currency = ParserUtil.getCurrency(query);
 		entry.addEntry(OfferKey.Currency, currency);
 		return store(OfferKey.Currency, currency);
+	}
+
+	public Entry breadCrumbs(String crumbs) {
+		entry.addEntry(OfferKeyConstants.BREADCRUMBS, crumbs);
+		return store(OfferKeyConstants.BREADCRUMBS, crumbs);
+	}
+
+	public Entry breadCrumbs(Collection<String> crumbs) {
+		String joined = StringUtils.join(crumbs, OfferKeyConstants.BREADCRUMB_DELIMITER);
+		entry.addEntry(OfferKeyConstants.BREADCRUMBS, joined);
+		return store(OfferKeyConstants.BREADCRUMBS, joined);
 	}
 
 	public Entry shipping(String shipping) { // todo
