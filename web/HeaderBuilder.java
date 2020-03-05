@@ -102,6 +102,18 @@ public final class HeaderBuilder {
 		return setOrAdd(HttpHeaderKey.Referer, String.valueOf(v));
 	}
 
+	public HeaderBuilder accept(String v) {
+		return setOrAdd(HttpHeaderKey.Accept, v);
+	}
+
+	public HeaderBuilder contentType(String v) {
+		return setOrAdd(HttpHeaderKey.ContentType, v);
+	}
+
+	public HeaderBuilder xmlHttpRequest() {
+		return setOrAdd("X-Requested-With", "XMLHttpRequest");
+	}
+
 	public HeaderBuilder cookie(String v) {
 		return setOrAdd(HttpHeaderKey.Cookie, v);
 	}

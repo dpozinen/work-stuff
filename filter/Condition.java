@@ -36,21 +36,41 @@ public abstract class Condition {
 	 */
 	public abstract boolean test(Filter f);
 
+	public static Condition not(final Condition other) {
+		return new Condition() {
+			@Override public boolean test(Filter f) {
+				return !other.test(f);
+			}
+		};
+	}
+
 	/**
 	 * An ability to chain Condition calls, so that the following is possible
 	 * {@code Condition.textIs("text", "is").or(Condition.textIs("text", "IS"))}
 	 * @param other other condition to test
 	 * @return this.condition || other.condition
 	 */
-	private Condition or(final Condition other) {
-		return null; // TODO find a way?
+	public final Condition or(final Condition other) {
+		final Condition thisCondition = this;
+		return new Condition() {
+			@Override
+			public boolean test(Filter f) {
+				return thisCondition.test(f) || other.test(f);
+			}
+		};
 	}
 
 	/**
 	 * @see #or(Condition)
 	 */
-	private Condition and(final Condition other) {
-		return null; // TODO find a way?
+	public final Condition and(final Condition other) {
+		final Condition thisCondition = this;
+		return new Condition() {
+			@Override
+			public boolean test(Filter f) {
+				return thisCondition.test(f) && other.test(f);
+			}
+		};
 	}
 
 	public static Condition attributeContainsIgnoreCase(final String name, final String contains) {

@@ -17,12 +17,17 @@ import java.util.Map;
  */
 public final class PostWrapper
 {
+	public static PostWrapper     DUMMY = defaultContent().add("", "{}");
 	private PostContent           content;
 	private IPostContentFormatter formatter;
 	private Map<String, String>   parameters;
 
 	public static PostWrapper defaultContent() {
 		return new PostWrapper();
+	}
+
+	public static PostWrapper defaultDecodedContent() {
+		return new PostWrapper(new PostContentDefaultFormatter(false));
 	}
 
 	private PostWrapper() {
@@ -32,11 +37,7 @@ public final class PostWrapper
 	}
 
 	public static PostWrapper copyOf(PostWrapper other) {
-		PostWrapper b = new PostWrapper();
-		b.content = other.content;
-		b.formatter = other.formatter;
-		b.parameters = new HashMap<>(other.parameters);
-		return b;
+		return new PostWrapper().copyHere(other);
 	}
 
 	public static PostWrapper copyOf(PostContent other) {
@@ -44,10 +45,12 @@ public final class PostWrapper
 	}
 
 	private PostWrapper copyHere(PostWrapper other) {
-		this.content = other.content;
-		this.formatter = other.formatter;
-		this.parameters = new HashMap<>(other.parameters);
-		return this;
+		PostWrapper copy = new PostWrapper(other.formatter);
+
+		for (Map.Entry<String, String> entry : other.parameters.entrySet())
+			copy.add(entry.getKey(), entry.getValue());
+
+		return copy;
 	}
 
 	private PostWrapper(PostContent content) {

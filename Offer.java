@@ -264,7 +264,19 @@ public final class Offer implements Comparable<Offer>, Serializable
 		return add("NumberOfVideos", count);
 	}
 
+	public Offer syndicatedImageCount(int count) {
+		return add("NumberOfSyndicatedImages", count);
+	}
+
+	public Offer syndicatedVideoCount(int count) {
+		return add("NumberOfSyndicatedVideos", count);
+	}
+
 	public Offer stock(String stock) {
+		return add(OfferKey.Stock, stock);
+	}
+
+	public Offer stock(Integer stock) {
 		return add(OfferKey.Stock, stock);
 	}
 
@@ -288,6 +300,10 @@ public final class Offer implements Comparable<Offer>, Serializable
 
 	public Offer collection(String collection) {
 		return add(OfferKeyConstants.COLLECTION, collection);
+	}
+
+	public Offer productId(String productId) {
+		return add(OfferKey.ProductId, productId);
 	}
 
 	public Offer productName(String productName) {
@@ -467,6 +483,24 @@ public final class Offer implements Comparable<Offer>, Serializable
 		return this;
 	}
 
+	public Offer reviewPros(String text)
+	{
+		if ( StringUtils.isNotBlank(text) )
+		{
+			return add(OfferKeyConstants.REVIEW_PRO_TEXT, text);
+		}
+		return this;
+	}
+
+	public Offer reviewCons(String text)
+	{
+		if ( StringUtils.isNotBlank(text) )
+		{
+			return add(OfferKeyConstants.REVIEW_CONS_TEXT, text);
+		}
+		return this;
+	}
+
 	// custom makers
 
 	public Offer addElectrolux(ElectroluxHelper<?> helper, String brand) {
@@ -492,9 +526,10 @@ public final class Offer implements Comparable<Offer>, Serializable
 			Object value = e.getValue(); Object key = e.getKey();
 			OfferKey k;
 
-			if (isKeyString(key))
+			if (isKeyString(key)) {
+				if ( StringUtils.isBlank((String) key)) continue;
 				k = customKeyStorage.get((String) key, isTableKey);
-			else
+			} else
 				k = (OfferKey) key;
 
 			if (value instanceof String) add(k, (String) value);
@@ -538,6 +573,7 @@ public final class Offer implements Comparable<Offer>, Serializable
 	}
 
 	public Offer add(String key, BigDecimal value) {
+		if ( StringUtils.isBlank(key)) return this;
 		OfferKey k = customKeyStorage.get(key);
 		entry.addValue(k, value);
 		return store(k, value);
@@ -548,6 +584,7 @@ public final class Offer implements Comparable<Offer>, Serializable
 	 * Stores the created key in the {@link #customKeyStorage} for use if it is going to be passed again
 	 */
 	public Offer add(String key, String value) {
+		if ( StringUtils.isBlank(key)) return this;
 		OfferKey k = customKeyStorage.get(key);
 		entry.addValue(k, value);
 		return store(k, value);
@@ -557,6 +594,7 @@ public final class Offer implements Comparable<Offer>, Serializable
 	 * @see #add(String, String)
 	 */
 	public Offer add(String key, Integer value) {
+		if ( StringUtils.isBlank(key)) return this;
 		OfferKey k = customKeyStorage.get(key);
 		if (value != null) {
 			entry.addValue(k, value);
@@ -569,6 +607,7 @@ public final class Offer implements Comparable<Offer>, Serializable
 	 * Same as {@link #add(String, String)} but the value will be normalized
 	 */
 	public Offer addNormalized(String key, String value) {
+		if ( StringUtils.isBlank(key)) return this;
 		OfferKey k = customKeyStorage.get(key);
 		String normValue = BasicParsingHelper.normalizeText(value);
 		entry.addValue(k, normValue);
@@ -589,6 +628,7 @@ public final class Offer implements Comparable<Offer>, Serializable
 	 * @see #add(String, String)
 	 */
 	public Offer addTableKey(String key, String value) {
+		if ( StringUtils.isBlank(key)) return this;
 		OfferKey k = customKeyStorage.get(key);
 		return addNormalized(k, value);
 	}
@@ -609,8 +649,7 @@ public final class Offer implements Comparable<Offer>, Serializable
 	 * Storage will be enabled on the returned offer.
 	 * @see #remove(String, IResultEntrySet)
 	 */
-	public Offer remove(OfferKey key, IResultEntrySet results)
-	{
+	public Offer remove(OfferKey key, IResultEntrySet results) {
 		if (intStorage != null) return removeFromFirst(key, results);
 		return this;
 	}
@@ -744,9 +783,9 @@ public final class Offer implements Comparable<Offer>, Serializable
 	 */
 	private static void logEmptyId(UriWrapper debugLink) {
 		if (debugLink == null)
-			System.out.println("LOG: entry was not created due to empty id. No further info available");
+			System.err.println("\n\nLOG: entry was not created due to empty id. No further info available\n");
 		else
-			System.out.printf("LOG: entry was not created due to empty id. Found on page: %s", debugLink);
+			System.err.printf("%n%nLOG: entry was not created due to empty id. Found on page: %s%n%n", debugLink);
 	}
 
 	private static class OfferKeyStore {

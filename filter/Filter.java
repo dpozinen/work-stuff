@@ -120,6 +120,32 @@ public class Filter implements Iterable<Filter> {
 	}
 
 	/**
+	 * Performs a deep scan of the filter, searching ALL the elements of the filter.
+	 *
+	 * @param condition the condition to match all filters against
+	 * @return a filter that contains all elements that match the given condition
+	 */
+	public Filter filter(Condition condition) {
+		return mergeAllToOne(all(condition));
+	}
+
+	/**
+	 * Filters by each path combining all the filters into one.
+	 * This is useful when you have several paths to filter through and you need results from all of them for a terminal operation,
+	 * unlike {@link #first(String, String...)} where the first nonEmpty is needed.
+	 *
+	 * @return a filter containing all filters by the provided paths
+	 */
+	public Filter filter(String path, String... paths) {
+		List<Filter> filters = new ArrayList<>();
+		filters.add(filter(path));
+
+		for (String p : paths) filters.add(filter(p));
+
+		return mergeAllToOne(filters);
+	}
+
+	/**
 	 * Filters the document by the provided paths
 	 *
 	 * @param paths the alternative paths if the first one returns an empty filter
@@ -210,7 +236,9 @@ public class Filter implements Iterable<Filter> {
 	 *
 	 * @param condition the condition to match all filters against
 	 * @return all the filters that match the given condition
+	 * @see #filter(Condition)
 	 */
+	@Deprecated
 	public List<Filter> all(Condition condition) {
 		List<Filter> ret = new ArrayList<>();
 		for (Filter f : this)
@@ -252,7 +280,7 @@ public class Filter implements Iterable<Filter> {
 	 * any elements, an empty/stub filter is returned.
 	 */
 	public Filter get(int i) {
-		return size() > i ? Filter.fromElement(requireNonNull(filter).get(i)) : EMPTY;
+		return i >= 0 && size() > i ? Filter.fromElement(requireNonNull(filter).get(i)) : EMPTY;
 	}
 
 	// #text
@@ -514,6 +542,17 @@ public class Filter implements Iterable<Filter> {
 	}
 
 	/**
+	 * Extracts the number from the text of the specified element in this filter,
+	 * applying {@link PricingHelper#extractNumber}.
+	 *
+	 * @return the number with scale of 2 and {@link RoundingMode#HALF_UP} or zero if the extracted text wasn't numeric
+	 */
+	public BigDecimal numberOrZero(int i) {
+		BigDecimal number = PricingHelper.extractNumber(text(i));
+		return number == null ? BigDecimal.ZERO : number;
+	}
+
+	/**
 	 * Extracts number with specified scale and RoundingMode
 	 *
 	 * @see #number(int)
@@ -531,6 +570,40 @@ public class Filter implements Iterable<Filter> {
 	public BigDecimal numberCleaned(int i, String regex) {
 		String text = text(i).replaceAll(regex, "");
 		return PricingHelper.extractNumber(text);
+	}
+
+	/**
+	 * Extracts the number from the text of the specified element in this filter, first removes what matches the regex, then
+	 * applies {@link PricingHelper#extractNumber}
+	 *
+	 * @return the number with scale of 2 and {@link RoundingMode#HALF_UP} or zero if the num was null
+	 */
+	public BigDecimal numberCleanedOrZero(int i, String regex) {
+		String text = text(i).replaceAll(regex, "");
+		BigDecimal number = PricingHelper.extractNumber(text);
+		return number == null ? BigDecimal.ZERO : number;
+	}
+
+	/**
+	 * Extracts the number from the text of the specified element in this filter,
+	 * applying {@link PricingHelper#extractNumber}.
+	 *
+	 * @return the int value of the number with scale of 2 and {@link RoundingMode#HALF_UP} or zero if the extracted text wasn't numeric
+	 */
+	public int intOrZero(int i) {
+		BigDecimal number = PricingHelper.extractNumber(text(i));
+		return number == null ? 0 : number.intValue();
+	}
+
+	/**
+	 * Extracts the integer from the text of the specified element in this filter,
+	 * applying {@link PricingHelper#extractNumber}.
+	 *
+	 * @return the number with scale of 2 and {@link RoundingMode#HALF_UP} or zero if the extracted text wasn't numeric
+	 */
+	public Integer integer(int i) {
+		BigDecimal number = PricingHelper.extractNumber(text(i));
+		return number == null ? null : number.intValue();
 	}
 
 	// #script
@@ -596,7 +669,7 @@ public class Filter implements Iterable<Filter> {
 	 * {@code document.filter("***.tr").groupBy(Grouper.text("***.td", 0), Grouper.text("***.td", 1));}
 	 *
 	 * @param key the {@link Grouper} that will be used for generating the keys of the map
-	 * @param val the {@link .Grouper} that will be used for generating the values of the map
+	 * @param val the {@link Grouper} that will be used for generating the values of the map
 	 * @see Grouper
 	 */
 	public <K, V> Map<K, V> groupBy(Grouper<K> key, Grouper<V> val) {
@@ -686,5 +759,16 @@ public class Filter implements Iterable<Filter> {
 	 */
 	public IHtmlElementFilter iHtmlFilter() {
 		return filter;
+	}
+
+	private Filter mergeAllToOne(List<Filter> filters) {
+		List<IHtmlElement> elements = new ArrayList<>();
+
+		for (Filter f : filters)
+			if (f.isNotEmpty())
+				for (IHtmlElement element : requireNonNull(f.filter))
+					elements.add(element);
+
+		return Filter.fromFilter(new HtmlElementFilter(elements.toArray(new IHtmlElement[0])));
 	}
 }

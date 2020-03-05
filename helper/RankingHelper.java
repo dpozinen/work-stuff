@@ -1,8 +1,8 @@
 package blackbee.swarm.parsinghelper;
 
-import blackbee.swarm.core.swarm.IQuery;
-
 import java.io.Serializable;
+
+import blackbee.swarm.core.swarm.IQuery;
 
 /**
  * A ranking helper, that contains {@link #overviewUrl} and {@link #rank} with setters and getters for them.
@@ -26,7 +26,7 @@ public abstract class RankingHelper<T extends RankingHelper<T>> implements Seria
 	public RankingHelper(IQuery query) {
 		this.isRankingMode = ModiHelper.isRankingMode(query);
 		this.rank = 0;
-		this.overviewUrl = "";
+		this.overviewUrl = "dummy";
 	}
 
 	public RankingHelper(RankingHelper<T> other) {

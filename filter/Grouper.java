@@ -42,11 +42,29 @@ public abstract class Grouper<T> {
 		};
 	}
 
+	public static Grouper<String> text(final boolean includeChildren) {
+		return new Grouper<String>() {
+			@Override
+			public String extract(Filter f) {
+				return f.text(0, includeChildren);
+			}
+		};
+	}
+
 	public static Grouper<String> text(final String path) {
 		return new Grouper<String>() {
 			@Override
 			public String extract(Filter f) {
 				return f.filter(path).text();
+			}
+		};
+	}
+
+	public static Grouper<String> firstText(final String path, final String... paths) {
+		return new Grouper<String>() {
+			@Override
+			public String extract(Filter f) {
+				return f.first(path, paths).text();
 			}
 		};
 	}
@@ -65,6 +83,24 @@ public abstract class Grouper<T> {
 			@Override
 			public String extract(Filter f) {
 				return f.filter(path).text(i, includeChild);
+			}
+		};
+	}
+
+	public static Grouper<String> text(final String path, final Condition condition) {
+		return new Grouper<String>() {
+			@Override
+			public String extract(Filter f) {
+				return f.filter(path).first(condition).text();
+			}
+		};
+	}
+
+	public static Grouper<String> text(final String path, final Condition condition, final String path2) {
+		return new Grouper<String>() {
+			@Override
+			public String extract(Filter f) {
+				return f.filter(path).first(condition).filter(path2).text();
 			}
 		};
 	}

@@ -4,7 +4,9 @@ import blackbee.swarm.util.JsonPathWrapper;
 import com.jayway.jsonpath.Criteria;
 import com.jayway.jsonpath.Filter;
 import com.jayway.jsonpath.InvalidJsonException;
+import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.Predicate;
+import com.jayway.jsonpath.TypeRef;
 import com.jayway.jsonpath.internal.JsonContext;
 import org.apache.commons.lang3.StringUtils;
 
@@ -15,19 +17,19 @@ import java.util.Map;
 
 public class JsonUtils {
 
+	public static final JsonContext EMPTY_JSON = parse("{}");
+
 	private JsonUtils()
 	{
 		throw new AssertionError();
 	}
 
-	public static List<JsonContext> createJsonList(JsonContext c, String path) {
-		List<?> variantMapList = c.read(path);
+	public static List<JsonContext> createJsonList(JsonContext c, String path, Predicate... filters) {
+		List<?> variantMapList = c.read(path, filters);
 		List<JsonContext> list = new ArrayList<>();
-
 		if (ParserUtil.isNotEmpty(variantMapList))
-			for (Object map : variantMapList)
-				list.add(parse(map));
-
+			for ( Object map : variantMapList )
+				list.add((JsonContext) JsonPathWrapper.parse(map));
 		return list;
 	}
 
@@ -100,7 +102,7 @@ public class JsonUtils {
 
 	public static boolean contextIsEmpty(JsonContext c)
 	{
-		return c != null && c.jsonString().equals("{}");
+		return c != null && (c.equals(EMPTY_JSON) || c.jsonString().equals("{}"));
 	}
 
 	public static String readString(JsonContext c, String path)
@@ -131,19 +133,46 @@ public class JsonUtils {
 		return PricingHelper.extractNumber(readString(c, path));
 	}
 
+	public static BigDecimal readBigDecimalOrZero(JsonContext c, String path)
+	{
+		BigDecimal number = PricingHelper.extractNumber(readString(c, path));
+		return number == null ? BigDecimal.ZERO : number;
+	}
+
 	public static JsonContext parse(String s) {
 		try {
 			return JsonPathWrapper.parse(s);
 		} catch (IllegalArgumentException | InvalidJsonException e) {
 			try {
-				return parse(ParserUtil.extractJson(s).jsonString());
+				JsonContext json = ParserUtil.extractJson(s);
+				if (contextIsEmpty(json))
+					try {
+						return parse(JsonPath.parse(s).jsonString());
+					} catch (IllegalArgumentException | InvalidJsonException e1) {
+						return EMPTY_JSON;
+					}
+				return parse(json.jsonString());
 			} catch (UnsupportedOperationException ex) {
-				return JsonPathWrapper.parse("{}");
+				return EMPTY_JSON;
 			}
 		}
 	}
 
+	/**
+	 * Returns the first element from the results. This is used with relative Json Paths for which {@link JsonContext#read} returns a list.
+	 * This methods gets that first element saving the generic information provided by the {@link TypeRef<T>}
+	 *
+	 * @param typeRef the type reference to provide
+	 * @param <T> the desired return type
+	 * @return the first element from the read results or null if the results were empty
+	 */
+	public static <T> T firstOrNull(JsonContext context, String path, TypeRef<List<T>> typeRef)
+	{
+		List<T> read = context.read(path, typeRef);
+		return ParserUtil.isNotEmpty(read) ? read.get(0) : null;
+	}
+
 	public static JsonContext parse(Object o) {
-		return (JsonContext) JsonPathWrapper.parse(o);
+		return o == null ? JsonPathWrapper.parse("{}") : (JsonContext) JsonPathWrapper.parse(o);
 	}
 }

@@ -121,6 +121,13 @@ public final class UriWrapper implements Serializable
 		return false;
 	}
 
+	public boolean containsSegmentMatches(String regex) {
+		for ( IUriSegment segment : uri.getUriPathSegments() )
+			if ( segment.toString().replace(SLASH, "").matches(regex) )
+				return true;
+		return false;
+	}
+
 	public boolean containsKey(String k) {
 		return uriParametersContains(k, true);
 	}
@@ -155,16 +162,6 @@ public final class UriWrapper implements Serializable
 
 	public Uri uri() {
 		return uri;
-	}
-
-	@Override public int hashCode()
-	{
-		return Objects.hash(uri);
-	}
-
-	@Override
-	public String toString() {
-		return uri.toString();
 	}
 
 	public UriWrapper removeSegment(String s) {
@@ -218,30 +215,22 @@ public final class UriWrapper implements Serializable
 		return removeParamMatches(regex, true);
 	}
 
-	public UriWrapper addSegment(String segment)
-	{
+	public UriWrapper addSegment(String segment) {
 		String clearSegment = removeSlashesFromSegment(segment);
-		String url = uri.toString();
-		if ( !url.endsWith(SLASH) )
-		{
-			url = url.concat(SLASH);
-		}
-		 url = url.concat(clearSegment).concat(SLASH);
-		return new UriWrapper(url);
+		UriWrapper copy = new UriWrapper(this).clearParams();
+
+		String newUrl = copy + segment;
+		UriWrapper ret = new UriWrapper(newUrl);
+
+		for ( KeyValuePair<String, String> parameter : this.uri.getParameters() )
+			ret.add(parameter.getKey(), parameter.getValue());
+
+		this.uri = ret.uri;
+		return this;
 	}
 
-	private String removeSlashesFromSegment(String segment)
-	{
-		String clearSegment = segment;
-		if ( segment.startsWith(SLASH) )
-		{
-			clearSegment = StringUtils.removeStart(segment, SLASH);
-		}
-		else if ( segment.endsWith(SLASH) )
-		{
-			clearSegment = StringUtils.removeEnd(segment, SLASH);
-		}
-		return clearSegment;
+	private String removeSlashesFromSegment(String segment) {
+		return segment.startsWith(SLASH) ? StringUtils.removeStart(segment, SLASH) : StringUtils.removeEnd(segment, SLASH);
 	}
 
 	private UriWrapper removeParamMatches(String regex, boolean matchingKeys) {
@@ -284,6 +273,21 @@ public final class UriWrapper implements Serializable
 
 	private boolean goodKV(String k, String v) {
 		return StringUtils.isNotBlank(k) && v != null;
+	}
+
+	@Override public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		UriWrapper that = (UriWrapper) o;
+		return uri.equals(that.uri);
+	}
+
+	@Override public int hashCode()  {
+		return Objects.hashCode(uri);
+	}
+
+	@Override public String toString() {
+		return uri.toString();
 	}
 
 	private void lol() {

@@ -3,6 +3,7 @@ package blackbee.swarm.parsinghelper.filter;
 import blackbee.swarm.parsinghelper.JsonUtils;
 import blackbee.swarm.util.JsonPathWrapper;
 import com.jayway.jsonpath.internal.JsonContext;
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.Objects;
@@ -12,7 +13,7 @@ import java.util.Objects;
  */
 public class Script {
 
-	private final String content;
+	private String content;
 	private static final JsonContext EMPTY_JSON = JsonPathWrapper.parse("{}");
 	static final Script EMPTY = new Script("");
 
@@ -27,34 +28,57 @@ public class Script {
 	public JsonContext subJson(String path) {
 		JsonContext json = json();
 		if (JsonUtils.contextIsEmpty(json)) return json;
-		return (JsonContext) JsonPathWrapper.parse(json.read(path));
+		return JsonUtils.parse(json.read(path));
 	}
 
 	public Script scriptAfter(String after) {
-		String script = StringUtils.substringAfter(content, after);
-		return new Script(script);
+		this.content = StringUtils.defaultString(StringUtils.substringAfter(content, after));
+		return this;
 	}
 
 	public Script scriptBefore(String before) {
-		String script = StringUtils.substringBefore(content, before);
-		return new Script(script);
+		this.content = StringUtils.defaultString(StringUtils.substringBefore(content, before));
+		return this;
+	}
+
+	public Script scriptBeforeLast(String before) {
+		this.content = StringUtils.defaultString(StringUtils.substringBeforeLast(content, before));
+		return this;
 	}
 
 	public Script scriptBetween(String open, String close) {
-		String script = StringUtils.substringBetween(content, open, close);
-		return new Script(script);
+		this.content = StringUtils.defaultString(StringUtils.substringBetween(content, open, close));
+		return this;
+	}
+
+	public Script addStart(String add) {
+		this.content = add + content;
+		return this;
+	}
+
+	public Script addEnd(String add) {
+		this.content = content + add;
+		return this;
+	}
+
+	public Script unescapeJson() {
+		this.content = StringEscapeUtils.unescapeJson(content);
+		return this;
 	}
 
 	public Script replace(String target, String replacement) {
-		return new Script(StringUtils.replace(content, target, replacement));
+		this.content = StringUtils.replace(content, target, replacement);
+		return this;
 	}
 
 	public Script replacePattern(String regex, String replacement) {
-		return new Script(StringUtils.replacePattern(content, regex, replacement));
+		this.content = StringUtils.replacePattern(this.content, regex, replacement);
+		return this;
 	}
 
 	public Script remove(String target) {
-		return new Script(StringUtils.remove(content, target));
+		this.content = StringUtils.remove(content, target);
+		return this;
 	}
 
 	public String content() {
